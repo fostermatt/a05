@@ -1,18 +1,2 @@
-###Assignment 5 - Documentation###
-#####What the program does#####  
-This program will read data from a file provided at the command line. The program will then attempt to evaluate the postfix expression on each line. After completion the evaluated value or error message (with short error explanation message) will be output to the screen.
-
-#####Limitations#####  
-The character limit depends on the system running this program, but in testing should greatly exceed 4 billion characters.  
-This program will only work with integers, floats and doubles may not be used. The maximum and minimum values of each integer (input and resulting answers) are determined by the system as well. Based on the C++ documentation the values supported should be from -32767 (-2^15 + 1) to 32767 (2^15 - 1).
-
-#####Operation#####  
-Command line operation execution as follows:  
-
-	$ ./<executable.name> <data.file>  <probing option> <max load factor>
-
-The data file must have 1 expression per line, terminated by a line feed.  
-Each line must be a valid postfix expressions, or an error message will be displayed.  
-Each line must separate all integers and/or operands by spaces.  
-
-Once executed the program will output the given expression followed by what it evaluates to or an error message and short message explaining the error.  
+CS 302 - Assignment 5
+Hash Table
