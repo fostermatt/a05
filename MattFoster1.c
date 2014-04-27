@@ -27,27 +27,26 @@ typedef struct hashType{
 	int searchFound;
 	int searchCollisions;
 	int searchFailures;
-}hashTable;
+}myTable;
 
 /*Prototypes*/
-int search(hashTable*,int);
+int search(myTable*,int);
 int nextPrime(int);
-int linearInsert(hashTable*, int);
-int quadraticInsert(hashTable*,int);
-void printHash(hashTable*);
-void rehash(hashTable*);
-int myHashFunc(hashTable*,int);
+int linearInsert(myTable*, int);
+int quadraticInsert(myTable*,int);
+void printHash(myTable*);
+void rehash(myTable*);
+int myHashFunc(myTable*,int);
 /*==========================================================*/
 int main(int argc, char *argv[]){
-	hashTable table;
+	myTable table;
 	FILE* fileStream;
 	char fileBuffer[50];
 	int number;
 	int i;
 
-	/*Initialize struct values*/
 	table.prevSize = 0;
-	table.size = 7;
+	table.size = 599;
 	table.activeCells = 0;
 	table.load = 0.0;
 	table.full = false;
@@ -64,17 +63,17 @@ int main(int argc, char *argv[]){
 	fileStream = fopen(argv[1],"r");
 	table.array = (int*)malloc(table.size*sizeof(int));
 
-	if(*argv[2]== '0')
+	if(*argv[2]== '0'){
 		table.probingOption = false;
-	else
+	}
+	else{
 		table.probingOption = true;
+	}
 	table.maxLoad = atof(argv[3]);
 
 	for(i=0;i<table.size;i++)
 		table.array[i] = 0;
 
-	/*Main loop, inserts elements into hash Table, keeps track of
-	  of load factor as well as rehashes when necessary*/
 	while(fgets(fileBuffer,sizeof(fileBuffer),fileStream)){
 		sscanf(fileBuffer,"%d",&number);
 		table.read++;
@@ -86,30 +85,20 @@ int main(int argc, char *argv[]){
 			table.activeCells++;
 			table.insertions++;
 		}
-		if(!table.insert)
+		if(!table.insert){
 			table.failures++;
-
-		/*Update load Factor*/		
+		}
 		table.load = table.activeCells/(float)table.size;
-		/*If no maxLoad was given and the insertion failed, rehash*/
 		if(table.load >= table.maxLoad){
 			rehash(&table);
 			table.rehashes++;
-			if(fgets(fileBuffer,sizeof(fileBuffer),fileStream)){
-				sscanf(fileBuffer,"%d",&number);
-				if(table.probingOption)
-					quadraticInsert(&table,number);
-				if(!table.probingOption)
-					linearInsert(&table,number);
-				table.activeCells++;
-				table.insertions++;
-			}
 		}
 		if(table.size == table.activeCells)
 			table.full = true;
 	}
 	printHash(&table);
-	/*Reread and search*/
+
+	/*search*/
 	rewind(fileStream);
 
 	while(fgets(fileBuffer,sizeof(fileBuffer),fileStream)){
@@ -127,11 +116,11 @@ int main(int argc, char *argv[]){
 	return 0;
 }
 
-int myHashFunc(hashTable* table, int number){
-	return number%table->size;
+int myHashFunc(myTable* table, int number){
+	return (111*number)%table->size;
 }
 
-int linearInsert(hashTable* table,int number){
+int linearInsert(myTable* table,int number){
 
 	int index = myHashFunc(table,number);
 	if(table->full)
@@ -154,43 +143,44 @@ int linearInsert(hashTable* table,int number){
 /*Adds elements to hash table, if collision, uses quadratic probing to insert
  elements that offset from original mapped spot, loops around array if bounds go
  over tableSize*/
-int quadraticInsert(hashTable* table,int number){
+int quadraticInsert(myTable* table,int number){
 	int i = 0;
 	int index = myHashFunc(table,number);
 
 	while(true){
-		/*Due to pattern of i^2%table->size it is only necessary to check up to
-		  table->size/2, else it just keeps repeating*/
-		if(i > table->size/2)
+		i++;
+
+		if(i > table->size)
 			return 0;
 		/*Maps to empty spot!*/
-		if(!table->array[index]){
+		if(table->array[index]==0){
 			table->array[index] = number;
 			return 1;
 		}
 		table->collisions++;
-		/*Quadratic probing of perfect square 1,4,9,16,25...
-		  using the fact they differ by odd number, 3,5,7,9...*/
-		index += 2*i+1;
-		i++;;
+		index = myHashFunc(table,number) + (pow(i,2)+1);
+
 		/*Should not go out of bounds*/
 		if(index >= table->size)
 			index %= table->size;
 	}
 }
 
-int search(hashTable* table,int number){
-	int index = number%table->size;
-	int i= index;
+int search(myTable* table,int number){
+	int index = myHashFunc(table,number);
+	int i = index;
 
-	while(1){
+	while(true){
 		if(number == table->array[index]){
 			table->searchFound++;
 			return 1;
 		}
-		index++;
 		table->searchCollisions++;
 
+		if(!table->probingOption) /*linear probing search*/
+			index++;
+		else /*quadratic probing search*/
+			index+=pow(i,2) + 1;
 		if(index >= table->size)
 			index %= table->size;
 		if(index == i){
@@ -200,10 +190,9 @@ int search(hashTable* table,int number){
 	}
 }
 
-/*Rehashes table once it has reached a size bigger than max load*/
-void rehash(hashTable* table){
-	/*New table size of next prime number twice as big*/
-	hashTable newTable;
+void rehash(myTable* table){
+
+	myTable newTable;
 	int i;
 	int j;
 
@@ -213,36 +202,33 @@ void rehash(hashTable* table){
 
 	table->full=0;
 	table->activeCells =0;
-	/*Initialize new table */
+
 	newTable.collisions = table->collisions;
 	newTable.full = 0;
 	newTable.size = table->size;
 	newTable.array = (int*)malloc(table->size*sizeof(int));
 
-	for(i=0;i<table->size;i++)
+	for(i=0;i<table->size;i++){
 		newTable.array[i] = 0;
+	}
 
-	/*hash every element of old table to new table*/
 	for(j=0; j < table->prevSize; j++){
-		/*Element is zero, do not insert*/
-		if(table->array[j]==0)
+		if(table->array[j]==0){
 		   continue;
-
+		}
 		if(table->probingOption){
 			quadraticInsert(&newTable,table->array[j]);
 		}
 		else{
 			linearInsert(&newTable,table->array[j]);
 		}
-
 		table->insertions++;
 		table->activeCells++;
 	}
-	/*free memory of old hashTable*/
 	free(table->array);
 	table->array = newTable.array;
 	table->collisions = newTable.collisions;
-	/*Update new load Factor*/
+
 	table->load = table->activeCells/(float)table->size;
 }
 
@@ -258,15 +244,15 @@ int nextPrime(int number){
 				break;
 			}
 		}
-		if(primeFlag)
+		if(primeFlag){
 			return number;
-		/*Check next possible prime*/
+		}
 		number += 2;
 		primeFlag = true;
 	}
 }
 
-void printHash(hashTable* table){
+void printHash(myTable* table){
 	int i;
 	for(i=0;i<table->size;i++)
 		if(table->array[i])
