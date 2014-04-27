@@ -29,15 +29,14 @@ typedef struct hashType{
 	int searchFailures;
 }myTable;
 
-/*Prototypes*/
-int search(myTable*,int);
-int nextPrime(int);
+int myHashFunc(myTable*,int);
 int linearInsert(myTable*, int);
 int quadraticInsert(myTable*,int);
-void printHash(myTable*);
+int search(myTable*,int);
 void rehash(myTable*);
-int myHashFunc(myTable*,int);
-/*==========================================================*/
+int nextPrime(int);
+void printHash(myTable*);
+
 int main(int argc, char *argv[]){
 	myTable table;
 	FILE* fileStream;
@@ -46,7 +45,7 @@ int main(int argc, char *argv[]){
 	int i;
 
 	table.prevSize = 0;
-	table.size = 599;
+	table.size = 101;
 	table.activeCells = 0;
 	table.load = 0.0;
 	table.full = false;
@@ -117,9 +116,8 @@ int main(int argc, char *argv[]){
 }
 
 int myHashFunc(myTable* table, int number){
-	return (111*number)%table->size;
+	return ((13*number+1)/2) % table->size;
 }
-
 int linearInsert(myTable* table,int number){
 
 	int index = myHashFunc(table,number);
@@ -127,22 +125,18 @@ int linearInsert(myTable* table,int number){
 		return 0;
 
 	while(true){
-		/*Maps to empty spot!*/
+
 		if(table->array[index]==0){
 			table->array[index] = number;
 			return 1;
 		}
 		table->collisions++;
 		index++;
-		/*Should not go out of bounds*/
+
 		if(index >= table->size)
 			index%=table->size;
 	}
 }
-
-/*Adds elements to hash table, if collision, uses quadratic probing to insert
- elements that offset from original mapped spot, loops around array if bounds go
- over tableSize*/
 int quadraticInsert(myTable* table,int number){
 	int i = 0;
 	int index = myHashFunc(table,number);
@@ -152,7 +146,7 @@ int quadraticInsert(myTable* table,int number){
 
 		if(i > table->size)
 			return 0;
-		/*Maps to empty spot!*/
+
 		if(table->array[index]==0){
 			table->array[index] = number;
 			return 1;
@@ -160,12 +154,10 @@ int quadraticInsert(myTable* table,int number){
 		table->collisions++;
 		index = myHashFunc(table,number) + (pow(i,2)+1);
 
-		/*Should not go out of bounds*/
 		if(index >= table->size)
 			index %= table->size;
 	}
 }
-
 int search(myTable* table,int number){
 	int index = myHashFunc(table,number);
 	int i = index;
@@ -177,9 +169,9 @@ int search(myTable* table,int number){
 		}
 		table->searchCollisions++;
 
-		if(!table->probingOption) /*linear probing search*/
+		if(!table->probingOption)	/*linear probing search*/
 			index++;
-		else /*quadratic probing search*/
+		else						/*quadratic probing search*/
 			index+=pow(i,2) + 1;
 		if(index >= table->size)
 			index %= table->size;
@@ -189,14 +181,12 @@ int search(myTable* table,int number){
 		}
 	}
 }
-
 void rehash(myTable* table){
 
 	myTable newTable;
 	int i;
 	int j;
 
-	/*new table size*/
 	table->prevSize = table->size;
 	table->size = nextPrime(table->size);
 
@@ -231,7 +221,6 @@ void rehash(myTable* table){
 
 	table->load = table->activeCells/(float)table->size;
 }
-
 int nextPrime(int number){
 	int i;
 	bool primeFlag = true;
@@ -251,7 +240,6 @@ int nextPrime(int number){
 		primeFlag = true;
 	}
 }
-
 void printHash(myTable* table){
 	int i;
 	for(i=0;i<table->size;i++)

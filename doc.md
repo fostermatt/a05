@@ -1,16 +1,18 @@
 ###Assignment 5 - Documentation###
 #####What the program does#####  
-This program will read integers from a data file and attempt to insert them into a hash table. 
+This program will read integers from a data file and attempt to insert them into a hash table, resizing the table as needed. Once the integers have all been inserted the table will be searched for all integers in the data file. The table will then be displayed on screen as well as accompanying data points (final table size, insertion failures, etc.)
 
-#####Limitations#####  
-The character limit depends on the system running this program, but in testing should greatly exceed 4 billion characters.  
-This program will only work with integers, floats and doubles may not be used. The maximum and minimum values of each integer (input and resulting answers) are determined by the system as well. Based on the C++ documentation the values supported should be from -32767 (-2^15 + 1) to 32767 (2^15 - 1).
+#####Limitations#####   
+This program will only accept integers; floats and doubles may not be used. Negative integers should sort properly but '0' cannot be sorted. The amount of integers that can be sorted is only limited by system memory as the program can resize the table as needed. 
 
 #####Operation#####  
 Command line operation execution as follows:  
 
 	$ ./<executable.name> <data.file>  <probing option> <load factor>
 
-The data file must  
+*data file* - must have non-zero integers seperated by white space.  
+*probing option* - enter '0' for linear probing and '1' for quadratic probing.  
+*load factor* - enter floating point value between 0 and 1.  
 
-Once executed the program will output the given expression followed by what it evaluates to or an error message and short message explaining the error.  
+#####Output#####  
+Upon completion of execution these items will be output; full hash table, integers read, max load factor, table size, number of elements in the table, final load factor, insertions performed, insertion collisions, insertion failures, integers to find, number found, search collisions, and search failures.
