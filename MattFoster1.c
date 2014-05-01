@@ -30,8 +30,8 @@ typedef struct hashType{
 }myTable;
 
 int myHashFunc(myTable*,int);
-int linearInsert(myTable*, int);
-int quadraticInsert(myTable*,int);
+bool linearInsert(myTable*, int);
+bool quadraticInsert(myTable*,int);
 int search(myTable*,int);
 void rehash(myTable*);
 int nextPrime(int);
@@ -76,15 +76,17 @@ int main(int argc, char *argv[]){
 	while(fgets(fileBuffer,sizeof(fileBuffer),fileStream)){
 		sscanf(fileBuffer,"%d",&number);
 		table.read++;
-		if(!table.probingOption)
+		if(!table.probingOption){
 			table.insert = linearInsert(&table,number);
-		if(table.probingOption)
+		}
+		else{
 			table.insert = quadraticInsert(&table,number);
+		}
 		if(table.insert){
 			table.activeCells++;
 			table.insertions++;
 		}
-		if(!table.insert){
+		else{
 			table.failures++;
 		}
 		table.load = table.activeCells/(float)table.size;
@@ -118,17 +120,17 @@ int main(int argc, char *argv[]){
 int myHashFunc(myTable* table, int number){
 	return ((13*number+1)/2) % table->size;
 }
-int linearInsert(myTable* table,int number){
+bool linearInsert(myTable* table,int number){
 
 	int index = myHashFunc(table,number);
 	if(table->full)
-		return 0;
+		return false;
 
 	while(true){
 
 		if(table->array[index]==0){
 			table->array[index] = number;
-			return 1;
+			return true;
 		}
 		table->collisions++;
 		index++;
@@ -137,25 +139,24 @@ int linearInsert(myTable* table,int number){
 			index%=table->size;
 	}
 }
-int quadraticInsert(myTable* table,int number){
+bool quadraticInsert(myTable* table,int number){
 	int i = 0;
 	int index = myHashFunc(table,number);
 
 	while(true){
-		i++;
-
 		if(i > table->size)
-			return 0;
+			return false;
 
 		if(table->array[index]==0){
 			table->array[index] = number;
-			return 1;
+			return true;
 		}
 		table->collisions++;
 		index = myHashFunc(table,number) + (pow(i,2)+1);
 
 		if(index >= table->size)
 			index %= table->size;
+		i++;
 	}
 }
 int search(myTable* table,int number){
@@ -227,7 +228,7 @@ int nextPrime(int number){
 	number = 2 * number + 1;
 
 	while(true){
-		for(i=2; i<= (sqrt(number)+1); i++){
+		for(i=2; i<= (number/2); i++){
 			if(!(number%i)){
 				primeFlag = false;	
 				break;
